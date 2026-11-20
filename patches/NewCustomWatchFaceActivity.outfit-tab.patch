@@ -1,0 +1,22 @@
+--- a/smali_classes3/com/crrepa/band/my/device/watchfacenew/photo/NewCustomWatchFaceActivity.smali
++++ b/smali_classes3/com/crrepa/band/my/device/watchfacenew/photo/NewCustomWatchFaceActivity.smali
+@@ -171,7 +171,8 @@
+ 
+     .line 41
+     .line 42
+-    invoke-interface {v1, v3}, Ljava/util/List;->add(Ljava/lang/Object;)Z
++    # BoultCustom: Outfit Watch Face tab removed - dress fragment is kept for field
++    # references but never added to the pager, so only the Gallery tab remains.
+ 
+     .line 43
+     .line 44
+@@ -455,7 +456,8 @@
+ 
+     .line 23
+     .line 24
+-    const/4 v1, 0x1
++    # BoultCustom: single-page pager after Outfit tab removal; always select page 0.
++    const/4 v1, 0x0
+ 
+     .line 25
+     invoke-virtual {v0, v1}, Landroidx/viewpager/widget/ViewPager;->setCurrentItem(I)V

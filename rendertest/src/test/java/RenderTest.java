@@ -22,6 +22,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.boultcustom.AnalogClock;
 import com.boultcustom.BoultHook;
+import com.boultcustom.DigitalClock;
 import com.boultcustom.EditorActivity;
 import com.boultcustom.EditorView;
 import com.boultcustom.Overlay;
@@ -53,6 +54,19 @@ public class RenderTest {
         Paint s = new Paint(Paint.ANTI_ALIAS_FLAG);
         s.setColor(Color.rgb(255, 214, 140));
         c.drawCircle(w * 0.68f, h * 0.3f, w * 0.12f, s);
+        return b;
+    }
+
+    private static Bitmap overlayStub(int w, int h) {
+        Bitmap b = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(b);
+        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        p.setColor(Color.rgb(60, 180, 120));
+        c.drawRoundRect(new RectF(0, 0, w, h), 30, 30, p);
+        p.setColor(Color.WHITE);
+        p.setTextSize(w * 0.22f);
+        p.setTextAlign(Paint.Align.CENTER);
+        c.drawText("CAT", w / 2f, h / 2f, p);
         return b;
     }
 
@@ -96,7 +110,6 @@ public class RenderTest {
         FragmentActivity act = Robolectric.buildActivity(FragmentActivity.class)
                 .create().start().resume().get();
 
-        // host screen content (stands in for the BandSetting device page)
         LinearLayout host = new LinearLayout(act);
         host.setOrientation(LinearLayout.VERTICAL);
         host.setBackgroundColor(Color.rgb(245, 246, 248));
@@ -106,12 +119,6 @@ public class RenderTest {
         t.setTextColor(Color.rgb(30, 32, 38));
         t.setPadding(60, 80, 60, 20);
         host.addView(t);
-        TextView wf = new TextView(act);
-        wf.setText("Watch Faces\n\n[Watch Faces 3] [Watch Faces 4] [Watch Faces 5] [FACE GALLERY]");
-        wf.setTextSize(16);
-        wf.setTextColor(Color.rgb(70, 74, 84));
-        wf.setPadding(60, 20, 60, 20);
-        host.addView(wf);
         act.setContentView(host);
         layout(host, 1080, 1920);
 
@@ -127,7 +134,6 @@ public class RenderTest {
         Bitmap frame = Bitmap.createBitmap(1080, 1920, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(frame);
         host.draw(canvas);
-        // dialog dim + bottom-anchored sheet
         canvas.drawColor(0x66000000);
         canvas.save();
         canvas.translate(0, 1920 - sheetH);
@@ -137,7 +143,7 @@ public class RenderTest {
         System.out.println("SHEET_HOST_PNG_OK");
     }
 
-    /** Editor with overlays clamped inside the photo bounds, plus export composite. */
+    /** v3 editor: base + added photo overlay + analog + digital + label, clamped, exported. */
     @Test
     public void renderEditorWithOverlays() throws Exception {
         EditorActivity act = Robolectric.buildActivity(EditorActivity.class)
@@ -150,33 +156,51 @@ public class RenderTest {
         ev.setBase(photoStub(1080, 1600));
         layout(root, 1080, 1920);
 
+        // 1. analog clock added first (bottom of the overlay stack)
         Overlay.Clock clock = new Overlay.Clock(430f);
         ev.addOverlay(clock);
         ev.centerOverlay(clock);
-        clock.y = ev.photoRect().top + ev.photoRect().height() * 0.30f;
+        clock.y = ev.photoRect().top + ev.photoRect().height() * 0.62f;
+
+        // 2. added photo goes over the clock (insertion order = z-order)
+        Overlay.Photo photo = new Overlay.Photo(overlayStub(500, 340), 420f);
+        ev.addOverlay(photo);
+        ev.centerOverlay(photo);
+        photo.y = ev.photoRect().top + ev.photoRect().height() * 0.55f;
+
+        // 3. digital clock added last, sits on top of the photo overlay
+        Overlay.Clock digital = new Overlay.Clock(430f);
+        digital.digital = true;
+        digital.format24 = false;
+        ev.addOverlay(digital);
+        ev.centerOverlay(digital);
+        digital.y = ev.photoRect().top + ev.photoRect().height() * 0.50f;
 
         Overlay.Label label = new Overlay.Label("Akarsh", 64f);
         ev.addOverlay(label);
         ev.centerOverlay(label);
+        label.y = ev.photoRect().top + ev.photoRect().height() * 0.85f;
+
+        if (ev.overlays().get(1) != photo || ev.overlays().get(2) != digital) {
+            throw new AssertionError("insertion-order z-order broken");
+        }
+        if (!ev.hasClockOverlay()) throw new AssertionError("hasClockOverlay false with clocks present");
 
         // deliberately shove an overlay outside the photo to prove clamping
         clock.y = -5000;
         Bitmap composite = ev.renderComposite();
         if (composite == null) throw new AssertionError("composite render failed");
         if (clock.y < ev.photoRect().top) throw new AssertionError("clamp failed: overlay escaped photo bounds");
+        savePng(composite, "/downloads/render_composite.png");
 
         layout(root, 1080, 1920);
         Bitmap shot = Bitmap.createBitmap(1080, 1920, Bitmap.Config.ARGB_8888);
         root.draw(new Canvas(shot));
         savePng(shot, "/downloads/render_editor.png");
-
-        // re-render composite after clamp for the export image
-        composite = ev.renderComposite();
-        savePng(composite, "/downloads/render_composite.png");
         System.out.println("EDITOR_PNG_OK");
     }
 
-    /** Exercise the actual controls: rotate, flip, filter, adjust, text dialog, clock, style, export. */
+    /** Exercise the v3 controls: clock panel, digital + 12/24h, adjust, text dialog, export. */
     @Test
     public void interactionAndExportIntent() throws Exception {
         EditorActivity act = Robolectric.buildActivity(EditorActivity.class)
@@ -191,10 +215,8 @@ public class RenderTest {
         click(root, "Rotate");
         if (ev.getBase().getWidth() != 1600) throw new AssertionError("rotate failed");
         click(root, "Flip");
-        click(root, "Filter: Original"); // -> Vivid
-        if (findByText(root, "Filter: Vivid") == null) throw new AssertionError("filter cycle failed");
         click(root, "Adjust");
-        if (findByText(root, "Adjust: Brightness") == null) throw new AssertionError("adjust failed");
+        if (findByText(root, "Brightness") == null) throw new AssertionError("adjust row failed");
 
         click(root, "Text");
         AlertDialog dlg = ShadowAlertDialog.getLatestAlertDialog();
@@ -212,23 +234,29 @@ public class RenderTest {
         }
         if (input == null) throw new AssertionError("no EditText in dialog");
         input.setText("Boult");
-        System.out.println("DBG input text now: '" + input.getText() + "'");
         dlg.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
-        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
-        System.out.println("DBG overlays after text: " + ev.overlays().size());
+        Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
         if (ev.overlays().size() != 1) throw new AssertionError("text overlay not added");
 
-        click(root, "Clock (static)");
+        // clock panel: add analog, restyle, switch to digital, toggle 12/24h
+        click(root, "Clock");
+        layout(root, 1080, 1920);
+        click(root, "Minimal");
         if (ev.overlays().size() != 2) throw new AssertionError("clock overlay not added");
-        click(root, "Clock style");
+        if (!(ev.selected() instanceof Overlay.Clock)) throw new AssertionError("clock not selected");
+        click(root, "Classic");
+        if (((Overlay.Clock) ev.selected()).style != AnalogClock.STYLE_CLASSIC) {
+            throw new AssertionError("analog restyle failed");
+        }
+        click(root, "Digital");
+        if (!((Overlay.Clock) ev.selected()).digital) throw new AssertionError("digital switch failed");
+        click(root, "12h/24h");
+        if (((Overlay.Clock) ev.selected()).format24) throw new AssertionError("12/24h toggle failed");
         click(root, "Size +");
         click(root, "Size -");
 
-        click(root, "Next: live clock");
-        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
-        File dir = act.getFilesDir();
-        File[] exported = dir.listFiles((d, n) -> n.startsWith("boultcustom_face_"));
-        System.out.println("DBG exported files: " + (exported == null ? 0 : exported.length));
+        click(root, "Save");
+        Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
         Intent intent = Shadows.shadowOf(act).getNextStartedActivity();
         if (intent == null) throw new AssertionError("no activity started on export, toasts=" + org.robolectric.shadows.ShadowToast.getTextOfLatestToast());
         String cls = intent.getComponent() != null ? intent.getComponent().getClassName() : null;

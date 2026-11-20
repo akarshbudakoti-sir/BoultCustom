@@ -8,15 +8,21 @@ on the owner's Boult Watch SF (firmware MOY-7BF4-2.0.2).
 
 1. **FACE GALLERY entry becomes a bottom sheet** (Watch gallery / Edit) instead of
    jumping straight into the stock face store. See `patches/`.
-2. **Built-in photo editor** (`src/com/boultcustom/`): import a photo, crop, adjust
-   (brightness/contrast/saturation), filter presets, overlays, static analog clock
-   decorations, export into the stock custom-face flow.
+2. **Built-in photo editor** (`src/com/boultcustom/`): import photos as layers over the
+   background, adjust (brightness/contrast/saturation), analog and digital clock and
+   text overlays with newest-added-on-top ordering, export into the stock custom-face
+   flow.
 3. **App name** shown as "BoultCustom".
+4. **Outfit Watch Face AI tab removed** from the stock custom-face screen (see
+   `patches/NewCustomWatchFaceActivity.outfit-tab.patch`).
 
 ## Status
 
-- v2 build installs and launches on the owner's realme (Android 13). Install requires
+- v3 build installs over v2 on the owner's realme (Android 13). Install requires
   removing the Play Store GoBoult Fit first (same package name, different signature).
+- Known v3 bug: the editor's Save hands the edited photo to the stock screen through a
+  preview extra that the stock gallery ignores when it already holds photos, so the edit
+  does not appear there. Fix in progress; the web preview shows the intended flow.
 - Most feature flows (editor -> export -> watch transfer) are not fully tested on-device.
 - The stock crop screen shows "Space is less than 0M" until the watch is connected:
   the app reads the watch's free photo-face storage over BLE and defaults to 0.
@@ -34,10 +40,13 @@ on the owner's Boult Watch SF (firmware MOY-7BF4-2.0.2).
 
 ## Web preview
 
-`docs/` holds a self-contained web preview of the photo editor, served by GitHub
-Pages. Use it to check editor and design changes without rebuilding the APK. It
-runs fully client-side (photos never leave the browser), has no Bluetooth or
-watch functions, and a clock ticking there is not proof of on-watch behavior.
+`docs/` holds a self-contained web preview of the app flow, served by GitHub
+Pages: `index.html` walks the screens (device page, FACE GALLERY sheet, demo face
+gallery, the editor, and the Custom Faces screen) and `editor.html` is the
+standalone editor. Use it to check editor and design changes without rebuilding
+the APK. It runs fully client-side (photos never leave the browser), all watch
+connection state and transfers are simulated and clearly marked, and a clock
+ticking there is not proof of on-watch behavior.
 The Android app remains the main build for actual watch use.
 
 ## Layout

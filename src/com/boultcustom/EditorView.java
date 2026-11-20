@@ -204,13 +204,17 @@ public class EditorView extends View {
             clampToPhoto(o);
             float bx = (o.x - offX) * exportScale;
             float by = (o.y - offY) * exportScale;
-            if (o instanceof Overlay.Clock) {
-                ((Overlay.Clock) o).drawExport(canvas, bx, by, exportScale);
-            } else if (o instanceof Overlay.Label) {
-                ((Overlay.Label) o).drawExport(canvas, bx, by, exportScale);
-            }
+            o.drawExport(canvas, bx, by, exportScale);
         }
         return out;
+    }
+
+    /** True when any overlay shows time, so the activity can tick the preview. */
+    public boolean hasClockOverlay() {
+        for (Overlay o : overlays) {
+            if (o instanceof Overlay.Clock) return true;
+        }
+        return false;
     }
 
     private float fitScale() {

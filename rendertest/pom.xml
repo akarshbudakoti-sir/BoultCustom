@@ -64,6 +64,13 @@
       <groupId>org.robolectric</groupId>
       <artifactId>robolectric</artifactId>
       <version>4.14.1</version>
+    </dependency>
+    <!-- Robolectric needs monitor's InstrumentationRegistry on the sandbox classpath;
+         the aar type is not class-loadable, so depend on the jar explicitly. -->
+    <dependency>
+      <groupId>androidx.test</groupId>
+      <artifactId>monitor</artifactId>
+      <version>1.7.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

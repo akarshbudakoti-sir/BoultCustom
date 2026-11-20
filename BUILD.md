@@ -27,8 +27,9 @@ sha256 9f8b65ad56424bfe8d0617f1fa38199f3499e7bdd16eea39205035a89f3fe502).
    native-code 'arm64-v8a' in badging, all .so entries Stored.
 2. Decode: `apktool d goboult-merged.apk -o decoded`
 3. Apply patches (see patches/):
-   a. AndroidManifest.xml: application android:name
-      com.pairip.application.Application -> com.crrepa.band.my.App
+   a. AndroidManifest.xml: set application android:name to the app's own
+      com.crrepa.band.my.App (the merged package must boot the app's own
+      entry class directly)
    b. AndroidManifest.xml: declare com.boultcustom.EditorActivity
    c. res/values/strings.xml: app_name -> BoultCustom
    d. Replace smali_classes3/com/crrepa/band/my/home/device/BandSettingFragment.smali

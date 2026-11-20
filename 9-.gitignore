@@ -1,0 +1,17 @@
+# Never commit signing material, binaries, or decompiled trees
+*.keystore
+*.jks
+*.apk
+*.idsig
+*.dex
+*.xapk
+decoded/
+work/
+work2/
+work3/
+build/
+build3/
+tools/
+chunks/
+*.so
+target/

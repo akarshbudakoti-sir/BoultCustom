@@ -197,6 +197,28 @@ document.querySelectorAll('.facetile').forEach((cv, i) => {
   cv.addEventListener('click', () => toast('Preset face slots apply from the Android app. This page is a preview.'));
 });
 
+/* simple watch illustration for the device page header */
+(function paintWatch() {
+  const cv = $('watchArt'), g = cv.getContext('2d');
+  const w = cv.width, h = cv.height, cx = w/2;
+  g.fillStyle = '#171a1f';
+  g.beginPath(); g.roundRect(cx-38, 6, 76, h-12, 26); g.fill();   // strap+body silhouette
+  g.fillStyle = '#22262d';
+  g.beginPath(); g.roundRect(cx-58, h*0.26, 116, h*0.48, 30); g.fill(); // case
+  const gr = g.createLinearGradient(0, h*0.26, 0, h*0.74);
+  gr.addColorStop(0, '#0e2a3a'); gr.addColorStop(1, '#123');
+  g.fillStyle = gr;
+  g.beginPath(); g.roundRect(cx-48, h*0.29, 96, h*0.42, 22); g.fill(); // screen
+  const n = new Date();
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = 'bold 30px system-ui';
+  g.fillText(String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0'), cx, h*0.50);
+  g.font = '11px system-ui'; g.fillStyle = '#9adfe8';
+  g.fillText('BoultCustom', cx, h*0.62);
+  g.fillStyle = '#2b3038';
+  g.beginPath(); g.roundRect(cx+56, h*0.38, 10, 26, 5); g.fill();   // crown
+})();
+
 /* device menu rows */
 const MENU = [
   ['Notifications', '#f5a623', '&#128172;'], ['Find Device', '#3b82f6', '&#128269;'],

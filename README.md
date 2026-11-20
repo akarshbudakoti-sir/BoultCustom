@@ -32,8 +32,17 @@ on the owner's Boult Watch SF (firmware MOY-7BF4-2.0.2).
 - Full downloadable face files (MoYoung Type A/B/C binaries) are a richer format with
   ordered elements (see BUILD.md notes); that path is unexplored for this app.
 
+## Web preview
+
+`docs/` holds a self-contained web preview of the photo editor, served by GitHub
+Pages. Use it to check editor and design changes without rebuilding the APK. It
+runs fully client-side (photos never leave the browser), has no Bluetooth or
+watch functions, and a clock ticking there is not proof of on-watch behavior.
+The Android app remains the main build for actual watch use.
+
 ## Layout
 
+- `docs/` - the web preview (GitHub Pages source)
 - `src/com/boultcustom/` - the added Java code (compiled to classes7.dex at build time)
 - `patches/` - the smali patch applied to the stock code, plus patch notes
 - `rendertest/` - Robolectric render tests for the editor components (component-level

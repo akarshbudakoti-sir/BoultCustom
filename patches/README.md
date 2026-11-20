@@ -1,6 +1,6 @@
 # Patches
 
-Four patches are applied to the decoded stock app (see BUILD.md step 3):
+Five patches are applied to the decoded stock app (see BUILD.md step 3):
 
 1. **Manifest application class**: set android:name to the app's own
    com.crrepa.band.my.App so the merged standalone package boots the app
@@ -15,3 +15,11 @@ Four patches are applied to the decoded stock app (see BUILD.md step 3):
    `Lcom/boultcustom/BoultHook;->showFaceGallerySheet(Landroidx/fragment/app/Fragment;)V`
    which shows the Watch gallery / Edit bottom sheet. Everything else in the
    file is byte-identical to stock.
+5. **NewCustomWatchFaceActivity.outfit-tab.patch** (this directory, narrow
+   unified diff against
+   smali_classes3/com/crrepa/band/my/device/watchfacenew/photo/NewCustomWatchFaceActivity.smali):
+   removes the Outfit Watch Face tab from the stock custom-face screen so only
+   the Gallery tab remains. Two hunks: the dress fragment is no longer added to
+   the pager's fragment list, and setVpCurrentItem always selects page 0 so a
+   stored outfit preference cannot select a missing page. Nothing else in the
+   file changes.
